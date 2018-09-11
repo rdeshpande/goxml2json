@@ -12,6 +12,7 @@ type Encoder struct {
 	err             error
 	contentPrefix   string
 	attributePrefix string
+	labelSanitizer  func(string) string
 }
 
 // NewEncoder returns a new encoder that writes to w.
@@ -25,6 +26,10 @@ func (enc *Encoder) SetAttributePrefix(prefix string) {
 
 func (enc *Encoder) SetContentPrefix(prefix string) {
 	enc.contentPrefix = prefix
+}
+
+func (enc *Encoder) SetLabelSanitizer(labelSanitizer func(string) string) {
+	enc.labelSanitizer = labelSanitizer
 }
 
 func (enc *Encoder) EncodeWithCustomPrefixes(root *Node, contentPrefix string, attributePrefix string) error {
@@ -79,6 +84,11 @@ func (enc *Encoder) format(n *Node, lvl int) error {
 		tot := len(n.Children)
 		for label, children := range n.Children {
 			enc.write("\"")
+
+			if enc.labelSanitizer != nil {
+				label = enc.labelSanitizer(label)
+			}
+
 			enc.write(label)
 			enc.write("\": ")
 
